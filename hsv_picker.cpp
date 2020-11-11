@@ -81,10 +81,14 @@ int main(int argc, char *argv[]) {
     input = cv::imread(argv[2]);
   }*/
 
-  if(argc != 2){
+  if(argc < 2){
 		std::cout << "Es muss die IP-Adresse des Pi Servers angegeben werden!" << std::endl;
-		std::cout << "Aufruf: ./hsv_picker IP_ADRESSE" << std::endl;
+		std::cout << "Aufruf: ./hsv_picker IP_ADRESSE [window name]" << std::endl;
 		return -1;
+	}
+	std::string pick_window_name = "input image";
+	if(argc == 3) {
+		pick_window_name = std::string(argv[2]);
 	}
 
   boost::asio::io_service ios;
@@ -129,10 +133,14 @@ int main(int argc, char *argv[]) {
 			img_buf.resize(sz);
 			boost::asio::read(socket, boost::asio::buffer(img_buf.data(), sz));
 
-      cv::Mat src = cv::imdecode(img_buf, 1);
+      cv::Mat reveived_image = cv::imdecode(img_buf, 1);
 
-			if(name == "input image") {
-				cv::cvtColor(src, input, cv::COLOR_RGB2HSV);
+			if(name == pick_window_name) {
+				if(name != "hsv") {
+					cv::cvtColor(reveived_image, input, cv::COLOR_RGB2HSV);
+				} else {
+					input = reveived_image;
+				}
 
         std::stringstream num_pixels, min_max;
         num_pixels << "Pixels analyzed: " << pixels_read.size();
@@ -161,7 +169,7 @@ int main(int argc, char *argv[]) {
     key = cv::waitKey(20);
   } while (key != 27);
 
-  
+
 
   return 0;
 }
